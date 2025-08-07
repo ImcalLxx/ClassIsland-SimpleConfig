@@ -1,0 +1,4 @@
+loguru==0.7.3
+orjson==3.11.1
+PyQt5==5.15.11
+PyQt5_sip==12.17.0

@@ -1,0 +1,8 @@
+ExampleJson/
+.vscode/
+ClassIsland/
+data/
+output/
+__pycache__/
+designer.lnk
+all_icons/
