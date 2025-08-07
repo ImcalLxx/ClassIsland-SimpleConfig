@@ -19,4 +19,4 @@
 2. 本项目还处在初期的测试阶段, **部分功能暂未支持**, 图形界面有待完善, 但基本功能可用
 3. 本人是一只高中生, 代码水平可能比较一言难尽... 所以轻点喷... 还有提的Issue和PR可能很久都不会看... 请谅解一下吧
 
-![Alt](https://repobeats.axiom.co/api/embed/f0f6f650f90f85e071bbacdf0ad16e4806a21edf.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/3e6200bd60bd28783bb3afd950da458f288acca6.svg "Repobeats analytics image")
