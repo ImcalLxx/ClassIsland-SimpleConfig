@@ -1,6 +1,6 @@
 # file: class_manager.py
 # brief: 课表及时间表管理模块
-# time: 2025.8.6
+# time: 2025.8.8
 # version: 0.1.0-Alpha-2
 # TODOs:
 #   1. parseClassTable, writeClassTable, parseTimetable, writeTimeTable的xlsx模式支持
@@ -8,7 +8,10 @@
 #   3. TimeTable加入特殊标识符区分间操, 午饭, 晚自习等
 
 import pickle   # TODO: 写保存模块, 避免使用pickle
-import time, datetime, math, os
+import time, datetime, math, os, orjson, json
+from   enum   import IntEnum
+from   typing import Literal
+from   mytime import MyTime
 from   loguru import logger
 
 class SingleClass:
@@ -16,10 +19,17 @@ class SingleClass:
     单节课课表类
     """
 
+    class SpecID(IntEnum):
+        extraSelfStudy = 0              # 晚自习/周六最后一节自习
+        midBreak       = 1              # 午休
+        evenBreak      = 2              # 晚饭休息
+        exercise       = 3              # 间操
+
     name: str
     nameInitial: str
     teacherName: str
     isOutdoor: bool = False
+    specID: int = 0                                                     # 特殊标识符
 
     def __init__(self, name: str, teacherName: str = "", isOutdoor: bool = False) -> None:
         """
@@ -32,6 +42,13 @@ class SingleClass:
         """
 
         self.name = name
+
+        # 模糊识别
+        if self.name == "英语":
+            self.name = "外语"
+        if self.name == "信息":
+            self.name = "信息技术"
+
         if name != "":
             self.nameInitial = name[0]
         else:
@@ -77,13 +94,15 @@ class ClassTable:
     课表管理类, 可以从文件读取课表并保存课表
     """
 
+    myTime: MyTime
+
     classTable1: list[list[SingleClass]] = []                   # 周一到周五课表, 外层下标=周几, 内层下标=第几节课
     classTable2: list[list[SingleClass]] = []                   # 周六课表, 外层下标=第几周, 内层下标=第几节课
     classTable3: list[list[SingleClass]] = [[], [], []]         # 晚课课表, 外层下标=第几周, 内层下标=周几晚课
     classTableToday: list[SingleClass] = []                     # 今天实际应该执行的课表
 
-    def __init__(self):
-        pass
+    def __init__(self, myTime: MyTime):
+        self.myTime = myTime
 
     def modifyDayClass(self, dayInWeek: int, dailyClass: list[SingleClass], allowAppend: bool = True) -> None:
         """
@@ -366,49 +385,70 @@ class ClassTable:
 
         return
 
-    def saveClassTable(self, outPath: str = "./data/classTable.cic") -> None:
+    def saveClassTable(self, outPath: str = "./data/classtable.json") -> None:
         """
-        用pickle保存课表
+        保存课表到json文件
 
         Args:
-            outPath (str, optional): 存放课表数据的路径. Defaults to "./data/classTable.cic".
+            outPath (str, optional): 存放课表数据的路径. Defaults to "./data/classTable.json".
         """
 
         logger.info(f"开始保存课表到路径 '{outPath}'")
 
+        data = {
+            "data":[
+                [[self.classTable1[i][j].name for j in range(len(self.classTable1[i]))] for i in range(len(self.classTable1))],
+                [[self.classTable2[i][j].name for j in range(len(self.classTable2[i]))] for i in range(len(self.classTable2))],
+                [[self.classTable3[i][j].name for j in range(len(self.classTable3[i]))] for i in range(len(self.classTable3))]
+            ]
+        }
+
         with open(outPath, "wb") as ct:
-            pickle.dump(self, ct)
+            ct.write(orjson.dumps(data))
 
         logger.success("保存课表完成")
         
         return
 
-    def loadClassTable(self, filePath = "./data/classTable.cic") -> None:
+    def loadClassTable(self, filePath = "./data/classtable.json") -> None:
         """
-        用pickle读取课表数据
+        读取课表数据
 
         Args:
-            filePath (str, optional): 存放课表数据的路径. Defaults to "./data/classTable.cic".
+            filePath (str, optional): 存放课表数据的路径. Defaults to "./data/classTable.json".
         """
 
         logger.info(f"开始从路径 '{filePath}' 读取课表")
 
         try:
-            with open(filePath, "rb") as ct:
-                _classTable: ClassTable = pickle.load(ct)
+            with open(filePath, "r", encoding="utf-8") as ct:
+                data: dict = json.load(ct)
         except FileNotFoundError:
             logger.error(f"加载课表时路径 '{filePath}' 不存在")
             return
         
-        self.classTable1 = _classTable.classTable1
-        self.classTable2 = _classTable.classTable2
-        self.classTable3 = _classTable.classTable3
+        l: list[list[list[str]]] = data["data"]
+
+        for i in range(len(l[0])):
+            for j in range(len(l[0][i])):
+                singleClass: SingleClass = SingleClass(l[0][i][j])
+                self.modifySingleClass(i, j, singleClass, True)
+        for i in range(len(l[1])):
+            satDayClass: list[SingleClass] = []
+            for j in range(len(l[1][i])):
+                singleClass: SingleClass = SingleClass(l[1][i][j])
+                satDayClass.append(singleClass)
+            self.modifySatDayClass(i, satDayClass)
+        for i in range(len(l[2])):
+            for j in range(len(l[2][i])):
+                singleClass: SingleClass = SingleClass(l[2][i][j])
+                self.modifyEvenDayClass(i, j, singleClass, True)
 
         logger.success("加载课表完成")
 
         return
                 
-    def getClassTableToday(self, timeTable: "TimeTable") -> None:
+    def getClassTableToday(self) -> None:
         """
         获取今天的课表
 
@@ -424,7 +464,7 @@ class ClassTable:
         SEC_PER_DAY: int = 86400
         daydiff = math.ceil(secdiff / SEC_PER_DAY)                      # 差的天数
         
-        weekcount = ((daydiff % 3) + timeTable.weekOffset2) % 3         # 3周轮换
+        weekcount = self.myTime.weekCount2                              # 3周轮换
 
         if curDateTime.weekday() == 6:
             logger.info("今天没有课程, 停止生成今日课表")
@@ -478,9 +518,6 @@ class TimeTable:
     normTimeList2: list[TimePeriod] = []                                # 平日(周一-周五)时间表, 双周
     satTimeList1:  list[TimePeriod] = []                                # 周六时间表, 单周
     satTimeList2:  list[TimePeriod] = []                                # 周六时间表, 双周
-
-    weekOffset1: int = 0                                                # 单双周偏移量
-    weekOffset2: int = 0                                                # 3周课表轮换偏移
     
     def __init__(self) -> None:
         pass
@@ -515,33 +552,26 @@ class TimeTable:
 
         return retList
 
-    def setWeekOffset1(self, val: int) -> None:
-        """
-        设置weekOffset1
-        """
-        
-        self.weekOffset1 = val
-
-    def setWeekOffset2(self, val: int) -> None:
+    
         """
         设置weekOffset2
         """
         
         self.weekOffset2 = val
 
-    def modifyTimeTable(self, timetableToMod: str, timePeriodCount: int, timePeriod: TimePeriod, allowAppend = True) -> None:
+    def modifyTimeTable(self, timeTableToMod: str, timePeriodCount: int, timePeriod: TimePeriod, allowAppend = True) -> None:
         """
         修改和添加时间表中的时间段
 
         Args:
-            timetableToMod (str): 要修改哪个时间表, 可选的值有"NTL1", "NTL2", "STL1", "STL2"(不区分大小写), 为上方四个列表的缩写
+            timeTableToMod (str): 要修改哪个时间表, 可选的值有"NTL1", "NTL2", "STL1", "STL2"(不区分大小写), 为上方四个列表的缩写
             timePeriodCount (int): 修改第几段时间(注意: 非第几节课, 从0开始)
             timePeriod (TimePeriod): 传入的时间表
             allowAppend (bool, optional): 是否允许在不够长时向后添加. Defaults to True.
         """
 
         # 我怎么之前写classtable没想到可以用一个字符串来指定修改哪个时间表...
-        if timetableToMod.lower() == "ntl1":
+        if timeTableToMod.lower() == "ntl1":
             if timePeriodCount >= len(self.normTimeList1):
                 # 原理同Classtable中的修改函数, 以下略去注释
                 if not allowAppend:
@@ -551,7 +581,7 @@ class TimeTable:
                         empTimePeriod: TimePeriod = TimePeriod(start=[0, 0], finish=[0, 0])
                         self.normTimeList1.append(empTimePeriod)
             self.normTimeList1[timePeriodCount] = timePeriod
-        elif timetableToMod.lower() == "ntl2":
+        elif timeTableToMod.lower() == "ntl2":
             if timePeriodCount >= len(self.normTimeList2):
                 if not allowAppend:
                     return
@@ -560,7 +590,7 @@ class TimeTable:
                         empTimePeriod: TimePeriod = TimePeriod(start=[0, 0], finish=[0, 0])
                         self.normTimeList2.append(empTimePeriod)
             self.normTimeList2[timePeriodCount] = timePeriod
-        elif timetableToMod.lower() == "stl1":
+        elif timeTableToMod.lower() == "stl1":
             if timePeriodCount >= len(self.satTimeList1):
                 if not allowAppend:
                     return
@@ -569,7 +599,7 @@ class TimeTable:
                         empTimePeriod: TimePeriod = TimePeriod(start=[0, 0], finish=[0, 0])
                         self.satTimeList1.append(empTimePeriod)
             self.satTimeList1[timePeriodCount] = timePeriod
-        elif timetableToMod.lower() == "stl2":
+        elif timeTableToMod.lower() == "stl2":
             if timePeriodCount >= len(self.satTimeList2):
                 if not allowAppend:
                     return
@@ -641,7 +671,7 @@ class TimeTable:
                     if stat == 0:                                       # 平日时间表
                         # 不是哥们为什么我最开始tp1和tp2用一个变量不行啊? Python不是只有按值传参吗?????
                         tp1: TimePeriod = TimePeriod(start=self.hm_str2time(t1), finish=self.hm_str2time(t2), timetype=timeType)
-                        self.modifyTimeTable(timetableToMod="NTL1", timePeriodCount=timePeriodCount, timePeriod=tp1)
+                        self.modifyTimeTable(timeTableToMod="NTL1", timePeriodCount=timePeriodCount, timePeriod=tp1)
 
                         if len(line) > p1 + 13:                         # 长度大于p1 + 13说明这是一个含双重时间点的行, 等会, 不会有人
                                                                         # 时间写一位吧???? 算了不管了, 自生自灭吧
@@ -652,36 +682,36 @@ class TimeTable:
                                 t3 = line[p2 + 7 : p2 + 12]
                                 tp2: TimePeriod = TimePeriod(start=self.hm_str2time(t1), finish=self.hm_str2time(t3), 
                                                              timetype=timeType)
-                                self.modifyTimeTable(timetableToMod="NTL2", timePeriodCount=timePeriodCount, timePeriod=tp2)
+                                self.modifyTimeTable(timeTableToMod="NTL2", timePeriodCount=timePeriodCount, timePeriod=tp2)
                             else:                                       # 起始时间点有两个
                                 # 读取午休开始时间, 格式为"午休:11:55/12:05-13:35"
                                 #                          ^^^^^ <-这里要读取的时间
                                 # ! 此处注意: 上方的tp永远是离"-"最近的时间, 因此上方的tp在这里是双周时间!!!
-                                self.modifyTimeTable(timetableToMod="NTL2", timePeriodCount=timePeriodCount, timePeriod=tp1)
+                                self.modifyTimeTable(timeTableToMod="NTL2", timePeriodCount=timePeriodCount, timePeriod=tp1)
                                 t3 = line[p2 - 11 : p2 - 6]
                                 tp2: TimePeriod = TimePeriod(start=self.hm_str2time(t3), finish=self.hm_str2time(t2), 
                                                              timetype=timeType)         # 此处为start
-                                self.modifyTimeTable(timetableToMod="NTL1", timePeriodCount=timePeriodCount, timePeriod=tp2)
+                                self.modifyTimeTable(timeTableToMod="NTL1", timePeriodCount=timePeriodCount, timePeriod=tp2)
                         else:
                             # 否则为正常行, 正常写入即可
-                            self.modifyTimeTable(timetableToMod="NTL2", timePeriodCount=timePeriodCount, timePeriod=tp1)
+                            self.modifyTimeTable(timeTableToMod="NTL2", timePeriodCount=timePeriodCount, timePeriod=tp1)
                     elif stat == 1:                                     # 周六时间表, 原理同上
                         tp1: TimePeriod = TimePeriod(start=self.hm_str2time(t1), finish=self.hm_str2time(t2), timetype=timeType)
-                        self.modifyTimeTable(timetableToMod="STL1", timePeriodCount=timePeriodCount, timePeriod=tp1)
+                        self.modifyTimeTable(timeTableToMod="STL1", timePeriodCount=timePeriodCount, timePeriod=tp1)
 
                         if len(line) > p1 + 13:
                             if line.find("/") > p2:
                                 t3 = line[p2 + 7 : p2 + 12]
                                 tp2: TimePeriod = TimePeriod(start=self.hm_str2time(t1), finish=self.hm_str2time(t3))
-                                self.modifyTimeTable(timetableToMod="STL2", timePeriodCount=timePeriodCount, timePeriod=tp2)
+                                self.modifyTimeTable(timeTableToMod="STL2", timePeriodCount=timePeriodCount, timePeriod=tp2)
                             else:
-                                self.modifyTimeTable(timetableToMod="STL2", timePeriodCount=timePeriodCount, timePeriod=tp1)
+                                self.modifyTimeTable(timeTableToMod="STL2", timePeriodCount=timePeriodCount, timePeriod=tp1)
                                 t3 = line[p2 - 11 : p2 - 6]
                                 tp2: TimePeriod = TimePeriod(start=self.hm_str2time(t3), finish=self.hm_str2time(t2), 
                                                              timetype=timeType)
-                                self.modifyTimeTable(timetableToMod="STL1", timePeriodCount=timePeriodCount, timePeriod=tp2)
+                                self.modifyTimeTable(timeTableToMod="STL1", timePeriodCount=timePeriodCount, timePeriod=tp2)
                         else:
-                            self.modifyTimeTable(timetableToMod="STL2", timePeriodCount=timePeriodCount, timePeriod=tp1)
+                            self.modifyTimeTable(timeTableToMod="STL2", timePeriodCount=timePeriodCount, timePeriod=tp1)
                     timePeriodCount += 1
                     count += 1
         elif mode.lower() == "xlsx" or mode.lower() == ".xlsx":
@@ -860,3 +890,17 @@ class TimeTable:
 
         return
     
+    def getTotalClassCount(self, timeTable: Literal["NTL1", "NTL2", "STL1", "STL2"]) -> int:
+        if timeTable == "NTL1" or timeTable == "NTL2":
+            count: int = 0
+            for tp in self.normTimeList1:
+                if tp.timeType == 0:
+                    count += 1
+            return count
+        else:
+            count: int = 0
+            for tp in self.normTimeList2:
+                if tp.timeType == 0:
+                    count += 1
+            return count
+        
