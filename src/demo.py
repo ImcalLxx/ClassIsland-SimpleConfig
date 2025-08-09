@@ -2,10 +2,10 @@
 # 包括基础显示, 自动生成配置文件, 单双周偏移调节等
 # TODO: 当前未实现的功能: 
 #   1. 设置界面
-#   2. 通过左侧滚动框调课
 
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtCore    import Qt, QCoreApplication
+from mytime          import MyTime
 from eventbus        import EventBus
 from gui             import Gui, EventHandler
 from ciconfig_ui     import Ui_MainWindow
@@ -74,7 +74,8 @@ if __name__ == '__main__':
     initLogger()
     checkDir()
 
-    classTable: ClassTable = ClassTable()
+    myTime = MyTime()
+    classTable: ClassTable = ClassTable(myTime)
     timeTable: TimeTable = TimeTable()
     jsonManager: JsonManager = JsonManager()
 
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     ui.setupUi(window)
 
     # 初始化事件总线
-    eventBus: EventBus = EventBus(app, ui, classTable, timeTable, jsonManager)
+    eventBus: EventBus = EventBus(app, ui, myTime, classTable, timeTable, jsonManager)
     eventBus.connectAllSingal()
 
     # 初始化事件处理

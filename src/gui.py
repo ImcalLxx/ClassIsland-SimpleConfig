@@ -1,7 +1,7 @@
 # file: gui.py
 # brief: UI模块
-# time: 2025.8.6
-# version: 0.1.0-Alpha-1
+# time: 2025.8.9
+# version: 0.1.0-Alpha-2
 # TODOs:
 #   1. UI基本框架
 #   2. 其他功能进一步跟进(见demo.py)
@@ -72,8 +72,8 @@ class EventHandler(QObject):
 
     EH_exit_Main:         pyqtSignal = pyqtSignal()
 
-    EH_setWeekOffset1_TT: pyqtSignal = pyqtSignal()
-    EH_setWeekOffset2_TT: pyqtSignal = pyqtSignal()
+    EH_setWeekOffset1_MT: pyqtSignal = pyqtSignal()
+    EH_setWeekOffset2_MT: pyqtSignal = pyqtSignal()
 
     EH_displaySAInfo_GUI: pyqtSignal = pyqtSignal()
 
@@ -106,10 +106,10 @@ class EventHandler(QObject):
         self.EH_exit_Main.connect(self.eventBus.EH_exit_Main)
 
         self.eventBus.UI_cb_offset1_currentIndexChanged_EH.connect(self.cb_offset1_CurrentIndexChanged)
-        self.EH_setWeekOffset1_TT.connect(self.eventBus.EH_setWeekOffset1_TT)
+        self.EH_setWeekOffset1_MT.connect(self.eventBus.EH_setWeekOffset1_MT)
 
         self.eventBus.UI_cb_offset2_currentIndexChanged_EH.connect(self.cb_offset2_CurrentIndexChanged)
-        self.EH_setWeekOffset2_TT.connect(self.eventBus.EH_setWeekOffset2_TT)
+        self.EH_setWeekOffset2_MT.connect(self.eventBus.EH_setWeekOffset2_MT)
 
         self.eventBus.UI_cb_ctinfo_currentIndexChanged_EH.connect(self.cb_ctinfo_CurrentIndexChanged)
         self.EH_displaySAInfo_GUI.connect(self.eventBus.EH_displaySAInfo_GUI)
@@ -215,14 +215,14 @@ class EventHandler(QObject):
         Offset1(单双周偏移)选择框被触发
         """
 
-        self.EH_setWeekOffset1_TT.emit()
+        self.EH_setWeekOffset1_MT.emit()
 
     def cb_offset2_CurrentIndexChanged(self) -> None:
         """
         Offset2(三周课表偏移)选择框被触发
         """
 
-        self.EH_setWeekOffset2_TT.emit()
+        self.EH_setWeekOffset2_MT.emit()
 
     def cb_ctinfo_CurrentIndexChanged(self) -> None:
         """
@@ -275,6 +275,10 @@ class Gui(QObject):
 
     GUI_setSAWidget_UI: pyqtSignal = pyqtSignal(object)
 
+    # 滚动区域中选择框触发的公共信号, 所有滚动框触发都连接到此信号
+    # int: 滚动框序号(即第N+1节课), str: 当前课程名称
+    GUI_SAComboBox_currentIndexChanged_CT: pyqtSignal = pyqtSignal(int, str)
+
     def connectAllSingal(self) -> None:
         """
         绑定所有信号
@@ -292,6 +296,8 @@ class Gui(QObject):
         self.eventBus.EB_displaySAInfo_GUI.connect(lambda contentToDisp: self.SA_DisplayInfo(contentToDisp))
 
         self.GUI_setSAWidget_UI.connect(self.eventBus.GUI_setSAWidget)
+
+        self.GUI_SAComboBox_currentIndexChanged_CT.connect(self.eventBus.GUI_SAComboBox_currentIndexChanged_CT)
 
     def createTrayIcon(self):
         """
@@ -333,7 +339,8 @@ class Gui(QObject):
         # 时间表的格式为: (QLabel)"平日   第1节课"   (QLabel)"07:30-08:10"
         # 因此课表需要一个QLabel显示文本, 对应text, 时间表需要两个, 对应text和text2
         # 下面的函数是用来添加一行的组件的, 会根据SA_DisplayInfo传入的类型自动判断显示课表/时间表的布局方式
-        def dp_AddRow(text: str, text2: Optional[str] = None, comboBoxDefaultText: Optional[str] = None):
+        def dp_AddRow(text: str, text2: Optional[str] = None, comboBoxDefaultText: Optional[str] = None, 
+                      classIndex: Optional[int] = None):
             """
             添加行信息
             """
@@ -370,6 +377,12 @@ class Gui(QObject):
                 classSelect.setFont(font)
                 if comboBoxDefaultText is not None and comboBoxDefaultText != "":
                     classSelect.setCurrentIndex(ALL_CLASSES.index(comboBoxDefaultText))
+                def f():
+                    logger.debug(f"ComboBox index changed! Index: {classIndex}, Now: {ALL_CLASSES[classSelect.currentIndex()]}")
+                    self.GUI_SAComboBox_currentIndexChanged_CT.emit(
+                        classIndex, ALL_CLASSES[classSelect.currentIndex()]
+                    )
+                classSelect.currentIndexChanged.connect(f)
                 rowLayout.addWidget(classSelect, stretch=1)
             else:
                 textOnRight = QLabel(text2)
@@ -385,8 +398,7 @@ class Gui(QObject):
         LDAYINWEEK: list[str] = ["周一", "周二", "周三", "周四", "周五", "周六"]
         #* 我为了简洁, 把课表和时间表显示捏一个函数里了
         #* 但是写完我才发现这玩意可读性差的一批
-        # TODO: 用空重构一下吧
-        # 还有, VSCode的Python语言解析好像快要被玩坏了呢~
+        # TODO: 有空重构一下吧
         if isinstance(contentToDisp, ClassTable):                       # 显示课表
             # 遍历今日课表
             curDateTime = datetime.datetime.now()
@@ -395,7 +407,8 @@ class Gui(QObject):
             classIndex: int = 0
 
             for singleClass in contentToDisp.classTableToday:
-                dp_AddRow(text + "   第" + str(classIndex + 1) + "节课", comboBoxDefaultText=singleClass.name)
+                dp_AddRow(text + "   第" + str(classIndex + 1) + "节课", comboBoxDefaultText=singleClass.name, 
+                          classIndex=classIndex)
                 classIndex += 1
         else:                                                           # 显示时间表
             # 遍历时间表
