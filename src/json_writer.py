@@ -1,7 +1,7 @@
 # file: json_writer.py
 # brief: Json文件读写模块
-# time: 2025.7.29
-# version: 0.1.0-Alpha-0
+# time: 2025.8.9
+# version: 0.1.0-Alpha-2
 # TODOs:
 #   1. 读取json文件并比较和已有课表的区别
 #   2. 对应读取和修改Default.json.bak, 防止ClassIsland不信任课表
@@ -13,7 +13,7 @@ from loguru import logger
 
 # 全部课程的列表
 ALL_CLASSES: list[str] = ["语文", "数学", "外语", "物理", "化学", "政治", "历史", "地理", "生物", "体育", 
-                          "心理", "研究", "自习", "社团", "通用技术", "班会", "信息技术"]
+                          "心理", "研究", "自习", "社团", "通用技术", "班会", "信息技术", "音乐"]
 
 # TODO: 这里我为了图方便用3个常量表达了AttachedObjects, 但我感觉日后这玩意得出大问题
 # 特定上课提示, 有一些只有这两项, 上课的还有第三项
