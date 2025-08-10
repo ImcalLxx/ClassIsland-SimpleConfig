@@ -110,7 +110,7 @@ class EventBus(QObject):
 
     LG_getClassTableToday_CT:  pyqtSignal = pyqtSignal()
     LG_generateOverAllDict_JM: pyqtSignal = pyqtSignal()
-    LG_writeJsonFile_JM:       pyqtSignal = pyqtSignal()
+    LG_writeJsonFile_JM:       pyqtSignal = pyqtSignal(str)
 
     LG_displaySAInfo_GUI: pyqtSignal = pyqtSignal()
 
@@ -120,6 +120,9 @@ class EventBus(QObject):
     EB_saveSettings_ST: pyqtSignal = pyqtSignal()
 
     GUI_SAComboBox_currentIndexChanged_CT: pyqtSignal = pyqtSignal(int, str)
+
+    LG_getPathToCI_ST:    pyqtSignal = pyqtSignal()
+    ST_returnPathToCI_LG: pyqtSignal = pyqtSignal(str)
     
     def connectAllSingal(self) -> None:
         """
@@ -178,7 +181,7 @@ class EventBus(QObject):
 
         self.LG_getClassTableToday_CT.connect(self.classTable.getClassTableToday)
         self.LG_generateOverAllDict_JM.connect(lambda: self.jsonManager.generateOverAllDict(self.classTable, self.timeTable))
-        self.LG_writeJsonFile_JM.connect(self.jsonManager.writeJsonFile)
+        self.LG_writeJsonFile_JM.connect(lambda outPath: self.jsonManager.writeJsonFile(outPath))
 
         self.LG_displaySAInfo_GUI.connect(lambda: self.EB_displaySAInfo_GUI.emit(self.classTable))
 
@@ -186,8 +189,6 @@ class EventBus(QObject):
             if self.myTime.curDateTime.weekday() == 5:                  # 周六
                 if index < len(self.classTable.classTable2[self.myTime.getWeekCount2()]):
                     self.classTable.classTable2[self.myTime.getWeekCount2()][index] = SingleClass(className)
-
-                    logger.debug(f"Sat Class! class index = {index}")
             elif self.myTime.curDateTime.weekday() == 6:                # 周日
                 return
             else:

@@ -28,6 +28,7 @@ class Settings(QObject):
     # 需要与其他类通信的通过EventBus中继
     ST_askForPathToCI_EH: pyqtSignal = pyqtSignal()
 
+    ST_returnPathToCI_LG: pyqtSignal = pyqtSignal(str)
 
     def connectAllSingal(self) -> None:
         """
@@ -40,6 +41,9 @@ class Settings(QObject):
         self.eventBus.EH_returnPathToCI_ST.connect(lambda pathToCI: f1(self, pathToCI)) 
 
         self.eventBus.EB_saveSettings_ST.connect(self.saveSettings)
+
+        self.ST_returnPathToCI_LG.connect(self.eventBus.ST_returnPathToCI_LG)
+        self.eventBus.LG_getPathToCI_ST.connect(lambda: self.ST_returnPathToCI_LG.emit(self.pathToCI))
 
     def saveSettings(self) -> None:
         """
@@ -100,6 +104,8 @@ class Logic(QThread):
     eventBus: EventBus
     startFirstTime: bool = False
 
+    pathToCI: str = ""
+
     def __init__(self, eventBus: EventBus, parent = None) -> None:
         super().__init__(parent)
         self.eventBus = eventBus
@@ -110,9 +116,11 @@ class Logic(QThread):
 
     LG_getClassTableToday_CT:  pyqtSignal = pyqtSignal()
     LG_generateOverAllDict_JM: pyqtSignal = pyqtSignal()
-    LG_writeJsonFile_JM:       pyqtSignal = pyqtSignal()
+    LG_writeJsonFile_JM:       pyqtSignal = pyqtSignal(str)
 
     LG_displaySAInfo_GUI:      pyqtSignal = pyqtSignal()
+
+    LG_getPathToCI_ST:         pyqtSignal = pyqtSignal()
     
     def connectAllSingal(self) -> None:
         """
@@ -127,6 +135,11 @@ class Logic(QThread):
 
         self.LG_displaySAInfo_GUI.connect(self.eventBus.LG_displaySAInfo_GUI)
 
+        self.LG_getPathToCI_ST.connect(self.eventBus.LG_getPathToCI_ST)
+        def f1(self: Logic, pathToCI: str):
+            self.pathToCI = pathToCI
+        self.eventBus.ST_returnPathToCI_LG.connect(lambda pathToCI: f1(self, pathToCI))
+
     def workMain(self) -> None:
         """
         主逻辑处理函数
@@ -139,11 +152,20 @@ class Logic(QThread):
 
         else:
             # 静默生成课表
-            # TODO: 偏移量设置
             logger.info("开始静默生成并写入今日课表")
+
+            self.LG_getPathToCI_ST.emit()
+
             self.LG_getClassTableToday_CT.emit()
             self.LG_generateOverAllDict_JM.emit()
-            self.LG_writeJsonFile_JM.emit()
+
+            if self.pathToCI != "":
+                outPath: str = self.pathToCI[:-15]
+                outPath += "Profiles/Default.json"
+            else:
+                outPath = "./output/Default.json"
+
+            self.LG_writeJsonFile_JM.emit(outPath)
 
         # TODO: 改用QEventLoop
         while True:                                                     # 主事件处理
