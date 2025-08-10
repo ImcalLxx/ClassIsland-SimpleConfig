@@ -8,10 +8,10 @@
 #   3. 写一个task, 在用pyuic转换ui文件时纠错(这个不着急)
 
 from PyQt5           import QtWidgets
-from PyQt5.QtCore    import Qt, QObject, pyqtSignal
+from PyQt5.QtCore    import Qt, QObject, pyqtSignal, QSize
 from PyQt5.QtWidgets import (QSystemTrayIcon, QMenu, QApplication, QMainWindow, QWidget, QApplication, QVBoxLayout, 
                              QLabel, QComboBox, QHBoxLayout, QMessageBox)
-from PyQt5.QtGui     import QIcon, QFont
+from PyQt5.QtGui     import QIcon, QFont, QPixmap
 from tkinter         import filedialog              # 用来选择文件的, 我懒得用PyQt了(
 from class_manager   import ClassTable, TimeTable
 from json_writer     import ALL_CLASSES, time2str_hm
@@ -332,6 +332,29 @@ class Gui(QObject):
         contentWidget = QWidget()
         self.contentLayout = QVBoxLayout(contentWidget)
         self.contentLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        if datetime.datetime.now().weekday() == 6:                      # 周日
+            self.contentLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            label: QLabel = QLabel()
+            font = QFont()
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            font.setFamily("HarmonyOS Sans SC")
+            font.setPointSize(13)
+            label.setText(" 今天没有课程喵!")
+            label.setFont(font)
+
+            icon: QLabel = QLabel()
+            icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            icon.setPixmap(QPixmap("./res/used_icons/温迪_2.png"))
+            icon.setScaledContents(True)
+            icon.setText("")
+            icon.setFixedSize(QSize(158, 135))
+            
+            self.contentLayout.addWidget(icon)
+            self.contentLayout.addWidget(label)
+            self.GUI_setSAWidget_UI.emit(contentWidget)
+            return
 
         # 此处的逻辑如下:
         # 滚动区域可以显示课表或者时间表信息
