@@ -1,0 +1,12 @@
+ExampleJson/
+.vscode/
+ClassIsland/
+data/
+output/
+__pycache__/
+designer.lnk
+all_icons/
+github-markdown-dark.css
+guide.md
+index.html
+guide/
