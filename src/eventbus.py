@@ -1,7 +1,7 @@
 # file: eventbus.py
 # brief: 事件总线模块
-# time: 2025.8.9
-# version: 0.1.0-Alpha-2
+# time: 2025.8.19
+# version: 0.1.0-Beta-1
 # TODOs:
 #   暂无
 
@@ -30,8 +30,7 @@ class EventBus(QObject):
     myTime: MyTime
 
     def __init__(self, app: QApplication, ui: Ui_MainWindow, settingsUi: Settings_Ui, myTime: MyTime,
-                 classTable: ClassTable, timeTable: TimeTable, jsonManager: JsonManager, window: QMainWindow,
-                 parent = None) -> None:
+                 classTable: ClassTable, timeTable: TimeTable, jsonManager: JsonManager, parent = None) -> None:
         super().__init__(parent)
 
         self.ui = ui
@@ -41,7 +40,6 @@ class EventBus(QObject):
         self.jsonManager = jsonManager
         self.app = app
         self.myTime = myTime
-        self.window = window        # TODO: Debug
 
     def onExit(self) -> None:
         """

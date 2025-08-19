@@ -1,5 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from mypath import resPath
+
 class Settings_Ui(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -9,14 +11,14 @@ class Settings_Ui(object):
         font.setPointSize(13)
         MainWindow.setFont(font)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("d:\\project\\CIConfig\\res\\used_icons/设置.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        icon.addPixmap(QtGui.QPixmap(resPath("res\\used_icons\\设置.png")), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.l_icon_pathToCI = QtWidgets.QLabel(self.centralwidget)
         self.l_icon_pathToCI.setGeometry(QtCore.QRect(40, 60, 41, 41))
         self.l_icon_pathToCI.setText("")
-        self.l_icon_pathToCI.setPixmap(QtGui.QPixmap("d:\\project\\CIConfig\\res\\used_icons/文件路径.png"))
+        self.l_icon_pathToCI.setPixmap(QtGui.QPixmap(resPath("res\\used_icons\\文件路径.png")))
         self.l_icon_pathToCI.setScaledContents(True)
         self.l_icon_pathToCI.setObjectName("l_icon_pathToCI")
         self.l_title = QtWidgets.QLabel(self.centralwidget)
@@ -43,7 +45,7 @@ class Settings_Ui(object):
         self.l_MainWindow = QtWidgets.QLabel(self.centralwidget)
         self.l_MainWindow.setGeometry(QtCore.QRect(40, 158, 38, 38))
         self.l_MainWindow.setText("")
-        self.l_MainWindow.setPixmap(QtGui.QPixmap("d:\\project\\CIConfig\\res\\used_icons/主界面.png"))
+        self.l_MainWindow.setPixmap(QtGui.QPixmap(resPath("res\\used_icons\\主界面.png")))
         self.l_MainWindow.setScaledContents(True)
         self.l_MainWindow.setObjectName("l_MainWindow")
         self.l_pathToCI_info_2 = QtWidgets.QLabel(self.centralwidget)

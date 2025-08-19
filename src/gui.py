@@ -1,11 +1,10 @@
 # file: gui.py
 # brief: UI模块
-# time: 2025.8.9
-# version: 0.1.0-Alpha-2
+# time: 2025.8.19
+# version: 0.1.0-Beta-1
 # TODOs:
-#   1. UI基本框架
-#   2. 其他功能进一步跟进(见demo.py)
-#   3. 写一个task, 在用pyuic转换ui文件时纠错(这个不着急)
+#   1. 其他功能进一步跟进(见demo.py)
+#   2. 写一个task, 在用pyuic转换ui文件时纠错(这个不着急)
 
 from PyQt5           import QtWidgets
 from PyQt5.QtCore    import Qt, QObject, pyqtSignal, QSize
@@ -17,6 +16,7 @@ from json_writer     import ALL_CLASSES, time2str_hm
 from eventbus        import EventBus
 from mytime          import MyTime
 from typing          import Callable, Optional, NoReturn, Union
+from mypath          import resPath
 from loguru          import logger
 import tkinter as tk
 import sys, datetime, math, time
@@ -30,7 +30,7 @@ class QssLoader:
         pass
 
     @staticmethod
-    def loadGlobalQss(qssFilePath: str = "./res/ciconfig_ui.qss") -> str:
+    def loadGlobalQss(qssFilePath: str = resPath("res\\ciconfig_ui.qss")) -> str:
         """
         读取PyQt的qss文件
 
@@ -107,11 +107,11 @@ class Gui(QObject):
 
         # 初始化托盘图标
         self.trayIcon = QSystemTrayIcon(self.window)
-        self.trayIcon.setIcon(QIcon("res/used_icons/温迪_1.png"))  # 请确保有合适的图标路径
+        self.trayIcon.setIcon(QIcon(resPath("res\\used_icons\\温迪_1.png")))  # 请确保有合适的图标路径
 
         # 使用QAction而不是QWidgetAction+QLabel
-        self.restoreAction = QtWidgets.QAction(QIcon("res/used_icons/恢复屏幕.png"), "显示主界面 ", self.window)
-        self.quitAction = QtWidgets.QAction(QIcon("res/used_icons/退出.png"), "退出", self.window)
+        self.restoreAction = QtWidgets.QAction(QIcon(resPath("res\\used_icons\\恢复屏幕.png")), "显示主界面 ", self.window)
+        self.quitAction = QtWidgets.QAction(QIcon(resPath("res\\used_icons\\退出.png")), "退出", self.window)
 
         trayMenu = QMenu()
         trayMenu.addAction(self.restoreAction)
@@ -147,7 +147,7 @@ class Gui(QObject):
 
             icon: QLabel = QLabel()
             icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            icon.setPixmap(QPixmap("./res/used_icons/温迪_2.png"))
+            icon.setPixmap(QPixmap(resPath("res\\used_icons\\温迪_2.png")))
             icon.setScaledContents(True)
             icon.setText("")
             icon.setFixedSize(QSize(158, 135))

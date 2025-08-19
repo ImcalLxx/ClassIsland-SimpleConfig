@@ -10,3 +10,6 @@ github-markdown-dark.css
 guide.md
 index.html
 guide/
+build/
+nuitka-crash-report.xml
+nuitka.txt

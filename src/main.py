@@ -99,7 +99,7 @@ if __name__ == '__main__':
     settingsUi.setupUi(settingsWindow)
 
     # 初始化事件总线
-    eventBus: EventBus = EventBus(app, ui, settingsUi, myTime, classTable, timeTable, jsonManager, window)
+    eventBus: EventBus = EventBus(app, ui, settingsUi, myTime, classTable, timeTable, jsonManager)
     eventBus.connectAllSingal()
 
     # 初始化事件处理
