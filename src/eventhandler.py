@@ -1,10 +1,17 @@
+# file: eventhandler.py
+# brief: 事件处理模块
+# time: 2025.8.18
+# version: 0.1.0-Alpha-3
+# TODOs:
+#   暂无
+
 from PyQt5.QtCore    import QObject, pyqtSignal
 from PyQt5.QtWidgets import QMessageBox, QWidget
 from tkinter         import filedialog   
 from eventbus        import EventBus
 from loguru          import logger
 from typing          import NoReturn
-import sys, os
+import sys
 
 
 class EventHandler(QObject):
@@ -79,6 +86,8 @@ class EventHandler(QObject):
 
         self.eventBus.ST_askForPathToCI_EH.connect(self.askForPathToCI)
         self.EH_returnPathToCI_ST.connect(self.eventBus.EH_returnPathToCI_ST)
+
+        self.eventBus.STUI_b_pathToCI_clicked_EH.connect(self.stui_b_pathToCI_OnClick)
 
     # 信号处理槽函数, 命名规范为: 控件名_操作(大驼峰)/信号名_操作(大驼峰)
     def b_import_ct_Onclick(self):
@@ -216,3 +225,15 @@ class EventHandler(QObject):
             self.EH_returnPathToCI_ST.emit(pathToCI)
         else:
             logger.info("选择ClassIsland可执行文件路径时用户取消")
+
+    def stui_b_pathToCI_OnClick(self) -> None:
+        """
+        设置UI pathToCI按钮按处理函数
+        """
+
+        pathToCI = filedialog.askopenfilename(title="请选择ClassIsland可执行文件路径", filetypes=((("可执行文件","*.exe"),)),
+                                                initialfile="ClassIsland.exe", initialdir=".")
+        if pathToCI == "":
+            logger.warning("选择ClassIsland可执行文件路径时失败, 可能为用户取消")
+            return
+        self.EH_returnPathToCI_ST.emit(pathToCI)                        # 借用上方信号回传文件路径

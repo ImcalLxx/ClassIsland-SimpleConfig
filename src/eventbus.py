@@ -6,10 +6,11 @@
 #   暂无
 
 from PyQt5.QtCore    import QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QMainWindow
 from ciconfig_ui     import Ui_MainWindow
 from class_manager   import ClassTable, TimeTable, SingleClass
 from json_writer     import JsonManager
+from settings_ui     import Settings_Ui
 from mytime          import MyTime
 from loguru          import logger
 import sys
@@ -21,23 +22,26 @@ class EventBus(QObject):
     """
 
     ui: Ui_MainWindow       # ui类, 绑定控件信号
+    settingsUi: Settings_Ui
     classTable:  ClassTable
     timeTable:   TimeTable
     jsonManager: JsonManager
     app: QApplication
     myTime: MyTime
 
-    def __init__(self, app: QApplication, ui: Ui_MainWindow, myTime: MyTime, classTable: ClassTable, 
-                 timeTable: TimeTable, jsonManager: JsonManager,
+    def __init__(self, app: QApplication, ui: Ui_MainWindow, settingsUi: Settings_Ui, myTime: MyTime,
+                 classTable: ClassTable, timeTable: TimeTable, jsonManager: JsonManager, window: QMainWindow,
                  parent = None) -> None:
         super().__init__(parent)
 
         self.ui = ui
+        self.settingsUi  = settingsUi
         self.classTable  = classTable
         self.timeTable   = timeTable
         self.jsonManager = jsonManager
-        self.app    = app
+        self.app = app
         self.myTime = myTime
+        self.window = window        # TODO: Debug
 
     def onExit(self) -> None:
         """
@@ -115,7 +119,7 @@ class EventBus(QObject):
     LG_displaySAInfo_GUI: pyqtSignal = pyqtSignal()
 
     ST_askForPathToCI_EH: pyqtSignal = pyqtSignal()
-    EH_returnPathToCI_ST: pyqtSignal = pyqtSignal(str)
+    EH_returnPathToCI_ST: pyqtSignal = pyqtSignal(str)                  # 在settings.py中连接了该信号
     
     EB_saveSettings_ST: pyqtSignal = pyqtSignal()
 
@@ -123,6 +127,15 @@ class EventBus(QObject):
 
     LG_getPathToCI_ST:    pyqtSignal = pyqtSignal()
     ST_returnPathToCI_LG: pyqtSignal = pyqtSignal(str)
+
+    UI_b_settings_clicked_ST: pyqtSignal = pyqtSignal()
+
+    ST_setComboBoxDefaultText_STUI: pyqtSignal = pyqtSignal(dict)
+    STUI_set_showMainWindow_ST:     pyqtSignal = pyqtSignal(bool)
+    STUI_b_pathToCI_clicked_EH:     pyqtSignal = pyqtSignal()
+
+    GUI_get_ShowMainWindow_ST:   pyqtSignal = pyqtSignal()
+    ST_returnShowMainWindow_GUI: pyqtSignal = pyqtSignal(bool)
     
     def connectAllSingal(self) -> None:
         """
@@ -207,5 +220,17 @@ class EventBus(QObject):
                     self.classTable.modifySingleClass(self.myTime.curDateTime.weekday(), index, singleClass)
 
                 logger.debug(f"index < evenClassIndex: {index < evenClassIndex}")
-
         self.GUI_SAComboBox_currentIndexChanged_CT.connect(lambda index, className: f3(index, className))
+
+        self.ui.b_settings.clicked.connect(self.UI_b_settings_clicked_ST)
+
+        def f4(data: dict) -> None:
+            self.settingsUi.comboBox.setCurrentIndex(0 if data["showMainWindow"] == False else 1)
+            self.settingsUi.l_pathToCI.setText(data["pathToCI"])
+        self.ST_setComboBoxDefaultText_STUI.connect(lambda data: f4(data))
+
+        self.settingsUi.comboBox.currentIndexChanged.connect(
+            lambda: self.STUI_set_showMainWindow_ST.emit(False if self.settingsUi.comboBox.currentIndex() == 0 else True)
+            )
+        
+        self.settingsUi.b_pathToCI.clicked.connect(self.STUI_b_pathToCI_clicked_EH)

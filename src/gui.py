@@ -54,6 +54,7 @@ class Gui(QObject):
     app: QApplication
     window: QMainWindow
     callBackFunc: Callable[[], None]
+    _showMainWindow: bool = False
 
     # 以下为事件处理的信号
     # 需要与其他类通信的通过EventBus中继
@@ -66,6 +67,8 @@ class Gui(QObject):
 
     GUI_setSAWidget_UI: pyqtSignal = pyqtSignal(object)
 
+    GUI_get_ShowMainWindow_ST: pyqtSignal = pyqtSignal()   # 这个是向设置类获取showMainWindow(设置项)信息
+
     # 滚动区域中选择框触发的公共信号, 所有滚动框触发都连接到此信号
     # int: 滚动框序号(即第N+1节课), str: 当前课程名称
     GUI_SAComboBox_currentIndexChanged_CT: pyqtSignal = pyqtSignal(int, str)
@@ -76,8 +79,8 @@ class Gui(QObject):
         """
 
         self.GUI_askForCallBackFunc_EB.connect(self.eventBus.GUI_askForCallBackFunc_EB)
-        def fr(f: Callable[[], None]): self.callBackFunc = f
-        self.eventBus.EB_returnCallBackFunc_GUI.connect(fr)
+        def f1(f: Callable[[], None]): self.callBackFunc = f
+        self.eventBus.EB_returnCallBackFunc_GUI.connect(f1)
 
         self.eventBus.EB_showMainWindow_GUI.connect(lambda SA_contentToDisp: self.showMainWindow(SA_contentToDisp))
         self.restoreAction.triggered.connect(self.eventBus.LG_showMainWindow_GUI)    # 借一下信号
@@ -92,6 +95,10 @@ class Gui(QObject):
 
         self.GUI_cb_offset1_setDefaultText_UI.connect(self.eventBus.GUI_cb_offset1_setDefaultText_UI)
         self.GUI_cb_offset2_setDefaultText_UI.connect(self.eventBus.GUI_cb_offset2_setDefaultText_UI)
+
+        self.GUI_get_ShowMainWindow_ST.connect(self.eventBus.GUI_get_ShowMainWindow_ST)
+        def f2(_showMainWindow: bool): self._showMainWindow = _showMainWindow
+        self.eventBus.ST_returnShowMainWindow_GUI.connect(lambda _showMainWindow: f2(_showMainWindow))
 
     def createTrayIcon(self):
         """
@@ -334,14 +341,22 @@ class Gui(QObject):
         self.GUI_cb_offset1_setDefaultText_UI.emit()
         self.GUI_cb_offset2_setDefaultText_UI.emit()
 
+        # 获取设置项，查看启动时是否显示主界面
+        self.GUI_get_ShowMainWindow_ST.emit()                           # 必须在设置项初始化后调用
+
     # 我才知道Python3.10以下不能写成"callBackFunc: [[], None] | None"......
     def start(self) -> None:
         """
         启动UI界面
         """
-
-        # 启动时最小化到托盘
-        self.window.hide()
+        
+        logger.debug(f"设置项'showMainWindow': {self._showMainWindow}")
+        if self._showMainWindow == True:
+            self.eventBus.LG_displaySAInfo_GUI.emit()
+            self.eventBus.LG_showMainWindow_GUI.emit()                  # 借一下信号
+        else:
+            # 启动时最小化到托盘
+            self.window.hide()
         
         try:
             sys.exit(self.app.exec_())

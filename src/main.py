@@ -12,7 +12,9 @@ from gui             import Gui
 from ciconfig_ui     import Ui_MainWindow
 from class_manager   import ClassTable, TimeTable
 from json_writer     import JsonManager
-from logic           import Logic, Settings
+from logic           import Logic
+from settings        import Settings
+from settings_ui     import Settings_Ui
 from loguru          import logger
 import os, sys
 
@@ -89,12 +91,15 @@ if __name__ == '__main__':
     # 初始化Qt主应用/主窗口
     app: QApplication = QApplication(sys.argv)
     window: QMainWindow = QMainWindow()
+    settingsWindow: QMainWindow = QMainWindow()
     # 初始化控件
     ui: Ui_MainWindow = Ui_MainWindow()
     ui.setupUi(window)
+    settingsUi: Settings_Ui = Settings_Ui()
+    settingsUi.setupUi(settingsWindow)
 
     # 初始化事件总线
-    eventBus: EventBus = EventBus(app, ui, myTime, classTable, timeTable, jsonManager)
+    eventBus: EventBus = EventBus(app, ui, settingsUi, myTime, classTable, timeTable, jsonManager, window)
     eventBus.connectAllSingal()
 
     # 初始化事件处理
@@ -104,7 +109,6 @@ if __name__ == '__main__':
     # 初始化GUI
     gui: Gui = Gui(myTime, eventBus, app, window)
     gui.connectAllSingal()
-    gui.init()                                                          # 必须在connectAllSingal后调用
 
     # 初始化逻辑处理
     logic: Logic = Logic(eventBus)
@@ -112,9 +116,12 @@ if __name__ == '__main__':
     logic.connectAllSingal()
 
     # 初始化设置类
-    settings: Settings = Settings(eventBus)
+    settings: Settings = Settings(settingsWindow, eventBus)
     settings.connectAllSingal()
     settings.init()                                                     # 加载设置
+
+    # 初始化GUI
+    gui.init()
 
     # 启动逻辑处理/GUI
     logic.start()
