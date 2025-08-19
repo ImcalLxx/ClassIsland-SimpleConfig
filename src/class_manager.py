@@ -430,9 +430,11 @@ class ClassTable:
         l: list[list[list[str]]] = data["data"]
 
         for i in range(len(l[0])):
+            dayClass: list[SingleClass] = []
             for j in range(len(l[0][i])):
                 singleClass: SingleClass = SingleClass(l[0][i][j])
-                self.modifySingleClass(i, j, singleClass, True)
+                dayClass.append(singleClass)
+            self.classTable1.append(dayClass)
         for i in range(len(l[1])):
             satDayClass: list[SingleClass] = []
             for j in range(len(l[1][i])):
