@@ -1,6 +1,6 @@
 # file: eventbus.py
 # brief: 事件总线模块
-# time: 2025.8.19
+# time: 2025.8.20
 # version: 0.1.0-Beta-1
 # TODOs:
 #   暂无
@@ -143,10 +143,17 @@ class EventBus(QObject):
         """
 
         self.ui.b_import_ct.clicked.connect(self.UI_b_import_ct_clicked_EH)
-        self.EH_parseClassTable_CT.connect(lambda filePath, mode: self.classTable.parseClassTable(filePath, mode))
+        def f5(filePath: str, mode: str) -> None:
+            self.classTable.parseClassTable(filePath, mode)
+            self.classTable.getClassTableToday()
+            f1()
+        self.EH_parseClassTable_CT.connect(lambda filePath, mode: f5(filePath, mode))
 
         self.ui.b_import_tt.clicked.connect(self.UI_b_import_tt_clicked_EH)
-        self.EH_parseTimeTable_TT.connect(lambda filePath, mode: self.timeTable.parseTimeTable(filePath, mode))
+        def f6(filePath: str, mode: str):
+            self.timeTable.parseTimeTable(filePath, mode)
+            f1()
+        self.EH_parseTimeTable_TT.connect(lambda filePath, mode: f6(filePath, mode))
 
         self.ui.b_export_ct.clicked.connect(self.UI_b_export_ct_clicked_EH)
         self.EH_writeClassTable_CT.connect(lambda filePath, mode: self.classTable.writeClassTable(filePath, mode))

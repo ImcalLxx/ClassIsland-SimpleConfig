@@ -1,7 +1,7 @@
 # 当前demo已经实现了基础功能
 # 包括基础显示, 自动生成配置文件, 单双周偏移调节等
 # TODO: 当前未实现的功能: 
-#   1. 设置界面
+#   暂无
 
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtCore    import Qt, QCoreApplication
