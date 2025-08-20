@@ -64,6 +64,8 @@ class EventBus(QObject):
             sys.exit()
         except SystemExit:
             self.onExit()
+        finally:
+            sys.exit()
 
     # 以下为所有信号的声明, 命名规范为: 发出者类简写(全大写)_信号内容_接收者类(槽函数所在类)简写(全大写)
     # 例: UI_showMainWindow_GUI: pyqtSingal = pyqtSingal() ...
