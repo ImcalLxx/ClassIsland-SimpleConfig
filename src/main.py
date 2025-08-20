@@ -85,6 +85,11 @@ if __name__ == '__main__':
     # 查看是否为第一次启动
     startFirstTime: bool = checkFirstTime()
 
+    try:
+        classTable.getClassTableToday()
+    except Exception:
+        pass
+
     # 设置应用属性
     QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
 

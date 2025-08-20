@@ -37,7 +37,7 @@ class Settings(QObject):
 
     ST_setComboBoxDefaultText_STUI: pyqtSignal = pyqtSignal(dict)
 
-    ST_returnShowMainWindow_GUI: pyqtSignal = pyqtSignal(bool)
+    ST_returnShowMainWindow_LG    : pyqtSignal = pyqtSignal(bool)
 
     def connectAllSingal(self) -> None:
         """
@@ -68,10 +68,8 @@ class Settings(QObject):
         def f3(showMainWindow: bool): self.showMainWindow = showMainWindow
         self.eventBus.STUI_set_showMainWindow_ST.connect(lambda showMainWindow: f3(showMainWindow))
 
-        self.ST_returnShowMainWindow_GUI.connect(self.eventBus.ST_returnShowMainWindow_GUI)
-        self.eventBus.GUI_get_ShowMainWindow_ST.connect(lambda: self.ST_returnShowMainWindow_GUI.emit(self.showMainWindow))
-
-
+        self.eventBus.LG_getShowMainWindow_ST.connect(lambda: self.ST_returnShowMainWindow_LG.emit(self.showMainWindow))
+        self.ST_returnShowMainWindow_LG.connect(self.eventBus.ST_returnShowMainWindow_LG)
 
     def saveSettings(self) -> None:
         """

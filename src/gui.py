@@ -67,8 +67,6 @@ class Gui(QObject):
 
     GUI_setSAWidget_UI: pyqtSignal = pyqtSignal(object)
 
-    GUI_get_ShowMainWindow_ST: pyqtSignal = pyqtSignal()   # 这个是向设置类获取showMainWindow(设置项)信息
-
     # 滚动区域中选择框触发的公共信号, 所有滚动框触发都连接到此信号
     # int: 滚动框序号(即第N+1节课), str: 当前课程名称
     GUI_SAComboBox_currentIndexChanged_CT: pyqtSignal = pyqtSignal(int, str)
@@ -82,7 +80,10 @@ class Gui(QObject):
         def f1(f: Callable[[], None]): self.callBackFunc = f
         self.eventBus.EB_returnCallBackFunc_GUI.connect(f1)
 
-        self.eventBus.EB_showMainWindow_GUI.connect(lambda SA_contentToDisp: self.showMainWindow(SA_contentToDisp))
+        def f_debug(SA_contentToDisp):
+            logger.debug(f"Singal GUI.EB_showMainWindow Triggered, contentToDisp: {type(SA_contentToDisp)}")
+            self.showMainWindow(SA_contentToDisp)
+        self.eventBus.EB_showMainWindow_GUI.connect(lambda SA_contentToDisp: f_debug(SA_contentToDisp))
         self.restoreAction.triggered.connect(self.eventBus.LG_showMainWindow_GUI)    # 借一下信号
         self.quitAction.triggered.connect(self.GUI_exit_Main)
         self.GUI_exit_Main.connect(self.eventBus.GUI_exit_Main)
@@ -95,10 +96,6 @@ class Gui(QObject):
 
         self.GUI_cb_offset1_setDefaultText_UI.connect(self.eventBus.GUI_cb_offset1_setDefaultText_UI)
         self.GUI_cb_offset2_setDefaultText_UI.connect(self.eventBus.GUI_cb_offset2_setDefaultText_UI)
-
-        self.GUI_get_ShowMainWindow_ST.connect(self.eventBus.GUI_get_ShowMainWindow_ST)
-        def f2(_showMainWindow: bool): self._showMainWindow = _showMainWindow
-        self.eventBus.ST_returnShowMainWindow_GUI.connect(lambda _showMainWindow: f2(_showMainWindow))
 
     def createTrayIcon(self):
         """
@@ -303,6 +300,7 @@ class Gui(QObject):
         显示主窗口
         """
 
+        logger.debug(f"GUI.showMainWindow called, contentToDisp: {type(contentToDisp)}")
         self.window.show()
         self.SA_DisplayInfo(contentToDisp)
 
@@ -341,22 +339,11 @@ class Gui(QObject):
         self.GUI_cb_offset1_setDefaultText_UI.emit()
         self.GUI_cb_offset2_setDefaultText_UI.emit()
 
-        # 获取设置项，查看启动时是否显示主界面
-        self.GUI_get_ShowMainWindow_ST.emit()                           # 必须在设置项初始化后调用
-
     # 我才知道Python3.10以下不能写成"callBackFunc: [[], None] | None"......
     def start(self) -> None:
         """
         启动UI界面
         """
-        
-        logger.debug(f"设置项'showMainWindow': {self._showMainWindow}")
-        if self._showMainWindow == True:
-            self.eventBus.LG_displaySAInfo_GUI.emit()
-            self.eventBus.LG_showMainWindow_GUI.emit()                  # 借一下信号
-        else:
-            # 启动时最小化到托盘
-            self.window.hide()
         
         try:
             sys.exit(self.app.exec_())

@@ -18,6 +18,7 @@ class Logic(QThread):
 
     eventBus: EventBus
     startFirstTime: bool = False
+    showMainWindow: bool = False
 
     pathToCI: str = ""
 
@@ -36,6 +37,8 @@ class Logic(QThread):
     LG_displaySAInfo_GUI:      pyqtSignal = pyqtSignal()
 
     LG_getPathToCI_ST:         pyqtSignal = pyqtSignal()
+
+    LG_getShowMainWindow_ST:   pyqtSignal = pyqtSignal()
     
     def connectAllSingal(self) -> None:
         """
@@ -51,19 +54,21 @@ class Logic(QThread):
         self.LG_displaySAInfo_GUI.connect(self.eventBus.LG_displaySAInfo_GUI)
 
         self.LG_getPathToCI_ST.connect(self.eventBus.LG_getPathToCI_ST)
-        def f1(self: Logic, pathToCI: str):
-            self.pathToCI = pathToCI
-        self.eventBus.ST_returnPathToCI_LG.connect(lambda pathToCI: f1(self, pathToCI))
+        def f1(pathToCI: str): self.pathToCI = pathToCI
+        self.eventBus.ST_returnPathToCI_LG.connect(lambda pathToCI: f1(pathToCI))
+
+        self.LG_getShowMainWindow_ST.connect(self.eventBus.LG_getShowMainWindow_ST)
+
+        def f2(showMainWindow: bool): self.showMainWindow = showMainWindow
+        self.eventBus.ST_returnShowMainWindow_LG.connect(lambda showMainWindow: f2(showMainWindow))
 
     def workMain(self) -> None:
         """
         主逻辑处理函数
         """
 
-        # 如果第一次启动
-        if self.startFirstTime == True:
-            self.LG_showMainWindow_GUI.emit()                           # 发送弹窗信号
-            self.LG_displaySAInfo_GUI.emit()
+        if self.showMainWindow == True or self.startFirstTime == True:
+            self.LG_showMainWindow_GUI.emit()
 
         else:
             # 静默生成课表
@@ -102,5 +107,7 @@ class Logic(QThread):
         """
 
         time.sleep(0.2)                                                   # 睡0.2秒, 等GUI初始化 (才不是我懒得写事件循环和信号呢(
+        self.LG_getShowMainWindow_ST.emit()
+        time.sleep(0.1)
         self.workMain()
         

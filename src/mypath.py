@@ -18,4 +18,4 @@ def resPath(relative_path):
             return os.path.join(base_path, relative_path)
     else:
         # 开发环境
-        return os.path.join(os.path.dirname(__file__), relative_path)
+        return os.path.join(relative_path)

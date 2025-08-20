@@ -133,7 +133,9 @@ class EventBus(QObject):
     STUI_b_pathToCI_clicked_EH:     pyqtSignal = pyqtSignal()
 
     GUI_get_ShowMainWindow_ST:   pyqtSignal = pyqtSignal()
-    ST_returnShowMainWindow_GUI: pyqtSignal = pyqtSignal(bool)
+
+    LG_getShowMainWindow_ST:     pyqtSignal = pyqtSignal()
+    ST_returnShowMainWindow_LG:  pyqtSignal = pyqtSignal(bool)
     
     def connectAllSingal(self) -> None:
         """
@@ -216,8 +218,6 @@ class EventBus(QObject):
                 elif index < evenClassIndex:
                     singleClass: SingleClass = SingleClass(className)
                     self.classTable.modifySingleClass(self.myTime.curDateTime.weekday(), index, singleClass)
-
-                logger.debug(f"index < evenClassIndex: {index < evenClassIndex}")
         self.GUI_SAComboBox_currentIndexChanged_CT.connect(lambda index, className: f3(index, className))
 
         self.ui.b_settings.clicked.connect(self.UI_b_settings_clicked_ST)
