@@ -79,6 +79,8 @@ class Logic(QThread):
             self.LG_getClassTableToday_CT.emit()
             self.LG_generateOverAllDict_JM.emit()
 
+            time.sleep(0.2)
+
             if self.pathToCI != "":
                 outPath: str = self.pathToCI[:-15]
                 outPath += "Profiles/Default.json"
