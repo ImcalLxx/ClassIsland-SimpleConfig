@@ -1,7 +1,6 @@
 # file: eventhandler.py
 # brief: 事件处理模块
 # time: 2025.8.19
-# version: 0.1.0-Beta-1
 # TODOs:
 #   暂无
 

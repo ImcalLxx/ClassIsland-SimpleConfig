@@ -1,7 +1,6 @@
 # file: eventbus.py
 # brief: 事件总线模块
 # time: 2025.8.20
-# version: 0.1.0-Beta-1
 # TODOs:
 #   暂无
 

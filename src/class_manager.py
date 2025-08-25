@@ -1,7 +1,6 @@
 # file: class_manager.py
 # brief: 课表及时间表管理模块
 # time: 2025.8.19
-# version: 0.1.0-Beta-1
 # TODOs:
 #   1. parseClassTable, writeClassTable, parseTimetable, writeTimeTable的xlsx模式支持
 #   2. TimeTable缺少writeTimeTable

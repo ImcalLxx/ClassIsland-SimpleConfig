@@ -1,7 +1,6 @@
 # file: json_writer.py
 # brief: Json文件读写模块
 # time: 2025.8.9
-# version: 0.1.0-Alpha-2
 # TODOs:
 #   1. 读取json文件并比较和已有课表的区别
 #   2. 对应读取和修改Default.json.bak, 防止ClassIsland不信任课表

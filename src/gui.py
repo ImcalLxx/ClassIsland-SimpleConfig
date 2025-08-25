@@ -1,7 +1,6 @@
 # file: gui.py
 # brief: UI模块
 # time: 2025.8.19
-# version: 0.1.0-Beta-1
 # TODOs:
 #   1. 其他功能进一步跟进(见demo.py)
 #   2. 写一个task, 在用pyuic转换ui文件时纠错(这个不着急)
