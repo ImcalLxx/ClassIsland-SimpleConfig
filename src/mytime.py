@@ -1,17 +1,16 @@
 # file: mytime.py
 # brief: 时间计算模块
-# time: 2025.8.8
-# version: 0.1.0-Alpha-2
+# time: 2025.8.25
 # TODOs:
 #   暂无
 
-from PyQt5.QtCore import QMutex, QMutexLocker
+from PyQt5.QtCore import QMutex, QMutexLocker, QThread
 import datetime
 from loguru       import logger
 import orjson, json, time, math, os
 
 
-class MyTime():
+class MyTime(QThread):
     """
     时间类, 计算周数, 偏移等
     """
@@ -41,6 +40,8 @@ class MyTime():
         self.weekCount2 = (_wof2 + self.weekOffset2) % 3
 
         self.curDateTime = datetime.datetime.now()
+
+        self.run()
 
     def saveTimeOffset(self) -> None:
         """
@@ -154,3 +155,13 @@ class MyTime():
             self.weekOffset2 = val % 3
 
         logger.debug(f"MyTime.setWeekOffset2 called! weekCount2: {self.weekCount2}, weekOffset2: {self.weekOffset2}")
+
+    def run(self) -> None:
+
+        while True:
+            _wof1, _wof2 = self.__calcWeekCount()
+            self.weekCount1 = (_wof1 + self.weekOffset1) % 2
+            self.weekCount2 = (_wof2 + self.weekOffset2) % 3
+            self.curDateTime = datetime.datetime.now()
+
+            time.sleep(300)
