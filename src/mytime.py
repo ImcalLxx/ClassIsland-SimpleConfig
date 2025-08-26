@@ -41,8 +41,6 @@ class MyTime(QThread):
 
         self.curDateTime = datetime.datetime.now()
 
-        self.start()
-
     def saveTimeOffset(self) -> None:
         """
         保存时间偏移量等数据

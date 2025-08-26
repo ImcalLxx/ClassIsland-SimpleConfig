@@ -78,6 +78,7 @@ if __name__ == '__main__':
     checkDir()
 
     myTime = MyTime()
+    myTime.start()
     classTable: ClassTable = ClassTable(myTime)
     timeTable: TimeTable = TimeTable()
     jsonManager: JsonManager = JsonManager(myTime)
