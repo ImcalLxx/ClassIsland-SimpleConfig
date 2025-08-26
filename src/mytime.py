@@ -41,7 +41,7 @@ class MyTime(QThread):
 
         self.curDateTime = datetime.datetime.now()
 
-        self.run()
+        self.start()
 
     def saveTimeOffset(self) -> None:
         """
